@@ -1,26 +1,29 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { ExpenseContext } from "../context/ExpenseContext";
 
-export default function ManagerPortal({ requests, setRequests }) {
+export default function ManagerPortal() {
+  const { expenses, updateExpense } = useContext(ExpenseContext);
+
   const [search, setSearch] = useState("");
   const [aiResults, setAiResults] = useState({});
 
-  const filtered = requests.filter((req) =>
-    req.employee.toLowerCase().includes(search.toLowerCase()) ||
-    req.vendor.toLowerCase().includes(search.toLowerCase())
+  // 🔍 Safe filter
+  const filtered = expenses.filter((req) =>
+    (req.employee || "").toLowerCase().includes(search.toLowerCase()) ||
+    (req.vendor || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const pending = requests.filter((r) => !r.finalStatus).length;
-  const approved = requests.filter((r) => r.finalStatus === "Approved").length;
-  const rejected = requests.filter((r) => r.finalStatus === "Rejected").length;
+  const pending = expenses.filter((r) => !r.finalStatus).length;
+  const approved = expenses.filter((r) => r.finalStatus === "Approved").length;
+  const rejected = expenses.filter((r) => r.finalStatus === "Rejected").length;
 
-  const updateStatus = (index, status) => {
-    const updated = [...requests];
-    updated[index].finalStatus = status;
-    setRequests(updated);
+  // ✅ FIXED (use id instead of index)
+  const updateStatus = (id, status) => {
+    updateExpense(id, { finalStatus: status });
   };
 
   // 🧠 AI FUNCTION
-  const runAI = (req, index) => {
+  const runAI = (req) => {
     const result =
       Number(req.amount) > 1500
         ? {
@@ -36,7 +39,7 @@ export default function ManagerPortal({ requests, setRequests }) {
 
     setAiResults((prev) => ({
       ...prev,
-      [index]: result,
+      [req.id]: result,
     }));
   };
 
@@ -97,8 +100,8 @@ export default function ManagerPortal({ requests, setRequests }) {
             {filtered.length === 0 ? (
               <p className="text-gray-500">No requests found</p>
             ) : (
-              filtered.map((req, index) => (
-                <div key={index} className="border-b py-4 space-y-2">
+              filtered.map((req) => (
+                <div key={req.id} className="border-b py-4 space-y-2">
 
                   {/* TOP ROW */}
                   <div className="flex justify-between items-center">
@@ -124,28 +127,28 @@ export default function ManagerPortal({ requests, setRequests }) {
 
                   {/* AI BUTTON */}
                   <button
-                    onClick={() => runAI(req, index)}
+                    onClick={() => runAI(req)}
                     className="px-3 py-1 bg-black text-white rounded text-sm"
                   >
                     Analyze with AI
                   </button>
 
                   {/* AI PANEL */}
-                  {aiResults[index] && (
+                  {aiResults[req.id] && (
                     <div className="p-3 bg-gray-100 rounded text-black">
                       <p>
                         🧠 AI Suggestion:
                         <span className="ml-2 font-semibold">
-                          {aiResults[index].decision}
+                          {aiResults[req.id].decision}
                         </span>
                       </p>
 
                       <p className="text-sm text-gray-600">
-                        Reason: {aiResults[index].reason}
+                        Reason: {aiResults[req.id].reason}
                       </p>
 
                       <p className="mt-1">
-                        {aiResults[index].risk === "High"
+                        {aiResults[req.id].risk === "High"
                           ? "⚠️ High Risk"
                           : "✅ Low Risk"}
                       </p>
@@ -155,14 +158,14 @@ export default function ManagerPortal({ requests, setRequests }) {
                   {/* ACTIONS */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => updateStatus(index, "Approved")}
+                      onClick={() => updateStatus(req.id, "Approved")}
                       className="px-3 py-1 border rounded hover:bg-black hover:text-white"
                     >
                       Approve
                     </button>
 
                     <button
-                      onClick={() => updateStatus(index, "Rejected")}
+                      onClick={() => updateStatus(req.id, "Rejected")}
                       className="px-3 py-1 border rounded hover:bg-black hover:text-white"
                     >
                       Reject

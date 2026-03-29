@@ -1,43 +1,31 @@
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import ManagerPortal from "./components/managerPortal";
+import Dashboard from "./components/Dashboard";
+import ExpenseForm from "./components/ExpenseForm";
+import ExpenseList from "./components/ExpenseList";
+import Profile from "./components/Profile";
+import Layout from "./components/Layout";
 
 function App() {
-  const [requests, setRequests] = useState([
-    {
-      amount: "850",
-      vendor: "Dominos",
-      category: "Food",
-      employee: "Aakash",
-      status: "Pending",
-    },
-    {
-      amount: "2200",
-      vendor: "Uber",
-      category: "Travel",
-      employee: "Mehek",
-      status: "Pending",
-    },
-    {
-      amount: "500",
-      vendor: "Starbucks",
-      category: "Food",
-      employee: "Sagar",
-      finalStatus: "Approved",
-    },
-    {
-      amount: "1800",
-      vendor: "Unknown",
-      category: "Misc",
-      employee: "Aashi",
-      finalStatus: "Rejected",
-    },
-  ]);
-
   return (
-    <ManagerPortal
-      requests={requests}
-      setRequests={setRequests}
-    />
+    <Router>
+      <Routes>
+
+        {/* Employee Layout */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="employee" element={<Dashboard />} />
+          <Route path="raise" element={<ExpenseForm />} />
+          <Route path="expenses" element={<ExpenseList />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+
+        {/* 🔥 Manager OUTSIDE Layout */}
+        <Route path="/manager" element={<ManagerPortal />} />
+
+      </Routes>
+    </Router>
   );
 }
 
